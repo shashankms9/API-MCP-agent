@@ -1,0 +1,11 @@
+.env
+.azure/
+.venv/
+.venv-1/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/

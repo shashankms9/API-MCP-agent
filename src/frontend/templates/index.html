@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Help Desk - AI Support Agent | 5 MCP Tools</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+        }
+
+        /* ---- Sidebar ---- */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sidebar-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-header h2 .icon { font-size: 20px; }
+        .sidebar-header p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .status-panel {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .status-panel h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-dot.green { background: var(--success); }
+        .status-dot.yellow { background: var(--warning); }
+        .status-dot.red { background: var(--danger); }
+
+        .quick-actions {
+            padding: 16px 20px;
+        }
+        .quick-actions h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .quick-btn {
+            display: block;
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-btn:hover {
+            background: rgba(59,130,246,0.2);
+            border-color: var(--accent);
+        }
+        .quick-btn .btn-icon { margin-right: 8px; }
+
+        .sidebar-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        /* ---- Tab navigation ---- */
+        .tab-nav {
+            display: flex;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        .tab-content { display: none; flex: 1; overflow-y: auto; }
+        .tab-content.active { display: flex; flex-direction: column; }
+
+        /* ---- Main Chat Area ---- */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .topbar {
+            padding: 14px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .topbar-left h1 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .topbar-left .agent-badge {
+            background: rgba(59,130,246,0.15);
+            color: var(--accent);
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .topbar-right {
+            display: flex;
+            gap: 8px;
+        }
+        .topbar-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .topbar-btn:hover { color: var(--text); border-color: var(--text-muted); }
+        .topbar-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        .topbar-btn.primary:hover { background: var(--accent-hover); }
+
+        /* Chat messages */
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .msg {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+        }
+        .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+        .msg.agent { align-self: flex-start; }
+        .msg-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .msg.user .msg-avatar { background: var(--accent); }
+        .msg.agent .msg-avatar { background: #7c3aed; }
+        .msg-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        .msg.user .msg-bubble {
+            background: var(--accent);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .msg.agent .msg-bubble {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+        .msg-bubble p { margin-bottom: 8px; }
+        .msg-bubble p:last-child { margin-bottom: 0; }
+        .msg-bubble ol, .msg-bubble ul { margin: 8px 0; padding-left: 20px; }
+        .msg-bubble li { margin-bottom: 4px; }
+        .msg-bubble code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .msg-bubble strong { color: #93c5fd; }
+
+        .tools-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding: 3px 8px;
+            background: rgba(124,58,237,0.15);
+            border: 1px solid rgba(124,58,237,0.3);
+            border-radius: 6px;
+            font-size: 11px;
+            color: #a78bfa;
+        }
+        .tools-badge span { font-size: 10px; }
+
+        .msg-system {
+            align-self: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 6px 16px;
+            background: rgba(51,65,85,0.5);
+            border-radius: 20px;
+        }
+        .msg-error {
+            align-self: center;
+            color: var(--danger);
+            font-size: 13px;
+            padding: 10px 16px;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 8px;
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+        }
+        .typing-indicator .msg-avatar { background: #7c3aed; }
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* Input area */
+        #input-area {
+            padding: 16px 32px 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        #user-input {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+            font-family: inherit;
+        }
+        #user-input:focus { border-color: var(--accent); }
+        #user-input::placeholder { color: #64748b; }
+        #send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        #send-btn:hover { background: var(--accent-hover); }
+        #send-btn:disabled { background: #475569; cursor: not-allowed; }
+        .input-hint {
+            font-size: 11px;
+            color: #4b5563;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        /* ---- Dashboard ---- */
+        .dashboard {
+            padding: 24px 32px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-content: start;
+        }
+        .dash-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+        }
+        .dash-card h3 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dash-card h3 .card-icon { font-size: 16px; }
+        .dash-card.full { grid-column: 1 / -1; }
+        .dash-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(51,65,85,0.5);
+        }
+        .dash-metric:last-child { border-bottom: none; }
+        .dash-val { font-weight: 600; }
+        .dash-val.ok { color: var(--success); }
+        .dash-val.warn { color: var(--warning); }
+        .dash-val.bad { color: var(--danger); }
+        .dash-val.muted { color: var(--text-muted); }
+        .dash-empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
+        .dash-loading { color: var(--text-muted); font-size: 12px; }
+        .badge-sm {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-sm.operational { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .badge-sm.degraded { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .badge-sm.outage { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .badge-sm.open { background: rgba(59,130,246,0.15); color: #3b82f6; }
+        .badge-sm.in_progress { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .badge-sm.resolved { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .badge-sm.critical { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .badge-sm.high { background: rgba(249,115,22,0.15); color: #f97316; }
+        .badge-sm.medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .badge-sm.low { background: rgba(34,197,94,0.15); color: #22c55e; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Welcome card */
+        .welcome-card {
+            background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(124,58,237,0.1));
+            border: 1px solid rgba(59,130,246,0.2);
+            border-radius: 16px;
+            padding: 28px;
+            max-width: 600px;
+            align-self: center;
+            text-align: center;
+            margin: auto 0;
+        }
+        .welcome-card h2 { font-size: 20px; margin-bottom: 8px; }
+        .welcome-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+        .welcome-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            text-align: left;
+        }
+        .welcome-feature {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .welcome-feature .feat-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        /* ---- Hamburger toggle (hidden on desktop) ---- */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 1100;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .sidebar-toggle:hover { background: var(--accent); }
+
+        /* ---- Overlay backdrop ---- */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* ---- Responsive: small screens ---- */
+        @media (max-width: 768px) {
+            .sidebar-toggle { display: flex; }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                width: 280px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main { width: 100%; }
+
+            .topbar {
+                padding-left: 60px;
+            }
+
+            #chat-container {
+                padding: 16px;
+            }
+            #input-area {
+                padding: 12px 16px 16px;
+            }
+
+            .welcome-features {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-features {
+                grid-template-columns: 1fr;
+            }
+            .topbar-left h1 { font-size: 14px; }
+            .topbar-right .topbar-btn { font-size: 11px; padding: 5px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar toggle (hamburger) -->
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">&#9776;</button>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><span class="icon">&#x1F6E0;</span> IT Help Desk</h2>
+            <p>AI Agent + Backend API + 5 MCP Modules</p>
+        </div>
+
+        <div class="sidebar-body">
+        <div class="status-panel">
+            <h3>Backend Connections</h3>
+            <div class="status-item">
+                <span><span class="status-dot" id="dot-backend"></span>Backend API</span>
+                <span style="color:var(--text-muted);font-size:11px" id="backend-status">...</span>
+            </div>
+            <div class="status-item">
+                <span><span class="status-dot" id="dot-cosmos"></span>Cosmos DB</span>
+                <span style="color:var(--text-muted);font-size:11px" id="cosmos-status">...</span>
+            </div>
+            <div class="status-item">
+                <span><span class="status-dot" id="dot-agent"></span>Foundry Agent</span>
+                <span style="color:var(--text-muted);font-size:11px" id="agent-status">...</span>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <h3>MCP Tool Modules</h3>
+            <div class="status-item">
+                <span><span class="status-dot green"></span>Ticket Management</span>
+                <span style="color:var(--text-muted);font-size:11px">5 tools</span>
+            </div>
+            <div class="status-item">
+                <span><span class="status-dot green"></span>Knowledge Base</span>
+                <span style="color:var(--text-muted);font-size:11px">2 tools</span>
+            </div>
+            <div class="status-item">
+                <span><span class="status-dot green"></span>System Monitoring</span>
+                <span style="color:var(--text-muted);font-size:11px">4 tools</span>
+            </div>
+            <div class="status-item">
+                <span><span class="status-dot green"></span>Employee Services</span>
+                <span style="color:var(--text-muted);font-size:11px">4 tools</span>
+            </div>
+            <div class="status-item">
+                <span><span class="status-dot green"></span>Security Operations</span>
+                <span style="color:var(--text-muted);font-size:11px">4 tools</span>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <h3>Quick Actions</h3>
+            <button class="quick-btn" onclick="quickSend('I need to report an IT issue - my laptop keeps crashing')">
+                <span class="btn-icon">&#x1F3AB;</span> Report an Issue
+            </button>
+            <button class="quick-btn" onclick="quickSend('My VPN keeps disconnecting, help me troubleshoot')">
+                <span class="btn-icon">&#x1F4D6;</span> Search Knowledge Base
+            </button>
+            <button class="quick-btn" onclick="quickSend('Show me the full system status dashboard and any active incidents')">
+                <span class="btn-icon">&#x1F4E1;</span> System Status Dashboard
+            </button>
+            <button class="quick-btn" onclick="quickSend('Look up employee Sarah Johnson and check her leave balance')">
+                <span class="btn-icon">&#x1F465;</span> Employee Lookup
+            </button>
+            <button class="quick-btn" onclick="quickSend('Show me all critical security alerts and the compliance report')">
+                <span class="btn-icon">&#x1F6E1;</span> Security Alerts
+            </button>
+            <button class="quick-btn" onclick="quickSend('Show all open tickets and SLA compliance metrics')">
+                <span class="btn-icon">&#x23F1;</span> SLA Compliance
+            </button>
+            <button class="quick-btn" onclick="quickSend('What pending access requests need approval?')">
+                <span class="btn-icon">&#x1F512;</span> Access Requests
+            </button>
+            <button class="quick-btn" onclick="quickSend('Get the new employee onboarding checklist')">
+                <span class="btn-icon">&#x1F4CB;</span> Onboarding Checklist
+            </button>
+        </div>
+        </div>
+
+        <div class="sidebar-footer">
+            Frontend :5000 &bull; Backend :8000 &bull; Cosmos DB &bull; Foundry Agent
+        </div>
+    </div>
+
+    <!-- Main Area -->
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <h1>IT Help Desk</h1>
+                <span class="agent-badge" id="connection-badge">Connecting...</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbar-btn" onclick="resetChat()">New Chat</button>
+                <button class="topbar-btn primary" onclick="refreshDashboard()">Refresh Data</button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('chat')">&#x1F4AC; Agent Chat</button>
+            <button class="tab-btn" onclick="switchTab('dashboard')">&#x1F4CA; Live Dashboard</button>
+        </div>
+
+        <!-- Chat tab -->
+        <div class="tab-content active" id="tab-chat" style="flex:1;display:flex;flex-direction:column;">
+            <div id="chat-container">
+                <div class="welcome-card" id="welcome">
+                    <h2>Welcome to IT Help Desk</h2>
+                    <p>I'm your AI support agent powered by <strong>Microsoft Foundry</strong>.<br>
+                       The Backend API connects to <strong>5 MCP Tool Modules</strong> (19 tools) backed by <strong>Cosmos DB</strong>.</p>
+                    <div class="welcome-features">
+                        <div class="welcome-feature"><span class="feat-icon">&#x1F3AB;</span><span><strong>Tickets</strong> — CRUD + SLA</span></div>
+                        <div class="welcome-feature"><span class="feat-icon">&#x1F4D6;</span><span><strong>KB</strong> — Troubleshooting</span></div>
+                        <div class="welcome-feature"><span class="feat-icon">&#x1F4E1;</span><span><strong>Monitoring</strong> — Health</span></div>
+                        <div class="welcome-feature"><span class="feat-icon">&#x1F465;</span><span><strong>Employees</strong> — HR</span></div>
+                        <div class="welcome-feature"><span class="feat-icon">&#x1F6E1;</span><span><strong>Security</strong> — Alerts</span></div>
+                        <div class="welcome-feature"><span class="feat-icon">&#x1F916;</span><span><strong>GPT-4o</strong> — Agent</span></div>
+                    </div>
+                </div>
+            </div>
+            <div id="input-area">
+                <div class="input-row">
+                    <textarea id="user-input" placeholder="Describe your IT issue or ask a question..." rows="1"></textarea>
+                    <button id="send-btn" onclick="sendMessage()">&#x27A4;</button>
+                </div>
+                <div class="input-hint">Press Enter to send &bull; Shift+Enter for new line</div>
+            </div>
+        </div>
+
+        <!-- Dashboard tab -->
+        <div class="tab-content" id="tab-dashboard">
+            <div class="dashboard" id="dashboard-grid">
+                <!-- Systems card -->
+                <div class="dash-card">
+                    <h3><span class="card-icon">&#x1F4E1;</span> System Status</h3>
+                    <div id="dash-systems"><span class="dash-loading">Loading...</span></div>
+                </div>
+                <!-- Tickets card -->
+                <div class="dash-card">
+                    <h3><span class="card-icon">&#x1F3AB;</span> Open Tickets</h3>
+                    <div id="dash-tickets"><span class="dash-loading">Loading...</span></div>
+                </div>
+                <!-- Security card -->
+                <div class="dash-card">
+                    <h3><span class="card-icon">&#x1F6E1;</span> Security Alerts</h3>
+                    <div id="dash-alerts"><span class="dash-loading">Loading...</span></div>
+                </div>
+                <!-- SLA card -->
+                <div class="dash-card">
+                    <h3><span class="card-icon">&#x23F1;</span> SLA Compliance</h3>
+                    <div id="dash-sla"><span class="dash-loading">Loading...</span></div>
+                </div>
+                <!-- Incidents card (full width) -->
+                <div class="dash-card full">
+                    <h3><span class="card-icon">&#x26A0;</span> Active Incidents</h3>
+                    <div id="dash-incidents"><span class="dash-loading">Loading...</span></div>
+                </div>
+                <!-- Compliance card -->
+                <div class="dash-card">
+                    <h3><span class="card-icon">&#x2705;</span> Compliance Report</h3>
+                    <div id="dash-compliance"><span class="dash-loading">Loading...</span></div>
+                </div>
+                <!-- Departments card -->
+                <div class="dash-card">
+                    <h3><span class="card-icon">&#x1F465;</span> Departments</h3>
+                    <div id="dash-departments"><span class="dash-loading">Loading...</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const badge = document.getElementById('connection-badge');
+        const welcome = document.getElementById('welcome');
+        const sessionId = 'session-' + Math.random().toString(36).substr(2, 9);
+        let hasMessages = false;
+
+        /* ── Health check ─────────────────────── */
+        fetch('/health').then(r => r.json()).then(d => {
+            const be = d.backend || {};
+            if (be.status === 'healthy') {
+                badge.textContent = 'Agent Online';
+                badge.style.background = 'rgba(34,197,94,0.15)';
+                badge.style.color = '#22c55e';
+                setDot('dot-backend', 'green'); setText('backend-status', 'Port 8000');
+                setDot('dot-cosmos', 'green'); setText('cosmos-status', 'Connected');
+                setDot('dot-agent', 'green'); setText('agent-status', 'GPT-4o');
+            } else {
+                badge.textContent = 'Backend Offline';
+                badge.style.background = 'rgba(239,68,68,0.15)';
+                badge.style.color = '#ef4444';
+                setDot('dot-backend', 'red'); setText('backend-status', 'Offline');
+                setDot('dot-cosmos', 'yellow'); setText('cosmos-status', '—');
+                setDot('dot-agent', 'yellow'); setText('agent-status', '—');
+            }
+        }).catch(() => {
+            badge.textContent = 'Offline';
+            badge.style.background = 'rgba(239,68,68,0.15)';
+            badge.style.color = '#ef4444';
+            setDot('dot-backend', 'red');
+            setDot('dot-cosmos', 'red');
+            setDot('dot-agent', 'red');
+        });
+
+        function setDot(id, color) {
+            document.getElementById(id).className = 'status-dot ' + color;
+        }
+        function setText(id, txt) {
+            document.getElementById(id).textContent = txt;
+        }
+
+        /* ── Tabs ─────────────────────────────── */
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (name==='chat' ? i===0 : i===1)));
+            document.getElementById('tab-chat').classList.toggle('active', name==='chat');
+            document.getElementById('tab-chat').style.display = name==='chat' ? 'flex' : 'none';
+            document.getElementById('tab-dashboard').classList.toggle('active', name==='dashboard');
+            if (name==='dashboard') refreshDashboard();
+        }
+
+        /* ── Dashboard data loading ── */
+        async function refreshDashboard() {
+            loadSystems(); loadTickets(); loadAlerts(); loadSLA();
+            loadIncidents(); loadCompliance(); loadDepartments();
+        }
+
+        async function loadSystems() {
+            try {
+                const d = await (await fetch('/api/systems')).json();
+                const el = document.getElementById('dash-systems');
+                if (d.systems) {
+                    el.innerHTML = d.systems.map(s =>
+                        `<div class="dash-metric"><span>${s.name || s.id}</span><span class="badge-sm ${s.status}">${s.status}</span></div>`
+                    ).join('');
+                }
+            } catch(e) { document.getElementById('dash-systems').innerHTML = '<span class="dash-empty">Error loading</span>'; }
+        }
+        async function loadTickets() {
+            try {
+                const d = await (await fetch('/api/tickets?status=open')).json();
+                const el = document.getElementById('dash-tickets');
+                if (d.tickets && d.tickets.length) {
+                    el.innerHTML = d.tickets.map(t =>
+                        `<div class="dash-metric"><span>${t.ticket_id} — ${t.title}</span><span class="badge-sm ${t.priority}">${t.priority}</span></div>`
+                    ).join('');
+                } else {
+                    el.innerHTML = '<span class="dash-empty">No open tickets</span>';
+                }
+            } catch(e) { document.getElementById('dash-tickets').innerHTML = '<span class="dash-empty">Error loading</span>'; }
+        }
+        async function loadAlerts() {
+            try {
+                const d = await (await fetch('/api/security/alerts')).json();
+                const el = document.getElementById('dash-alerts');
+                if (d.alerts && d.alerts.length) {
+                    el.innerHTML = d.alerts.map(a =>
+                        `<div class="dash-metric"><span>${a.type || a.id}</span><span class="badge-sm ${a.severity}">${a.severity}</span></div>`
+                    ).join('');
+                } else {
+                    el.innerHTML = '<span class="dash-empty">No alerts</span>';
+                }
+            } catch(e) { document.getElementById('dash-alerts').innerHTML = '<span class="dash-empty">Error loading</span>'; }
+        }
+        async function loadSLA() {
+            try {
+                const d = await (await fetch('/api/tickets/sla')).json();
+                const el = document.getElementById('dash-sla');
+                const pct = d.sla_compliance_pct || 0;
+                const cls = pct >= 95 ? 'ok' : pct >= 80 ? 'warn' : 'bad';
+                el.innerHTML = `
+                    <div class="dash-metric"><span>Compliance</span><span class="dash-val ${cls}">${pct}%</span></div>
+                    <div class="dash-metric"><span>Total tickets</span><span class="dash-val muted">${d.total_tickets || 0}</span></div>
+                    <div class="dash-metric"><span>SLA breached</span><span class="dash-val ${d.sla_breached>0?'bad':'ok'}">${d.sla_breached || 0}</span></div>
+                `;
+            } catch(e) { document.getElementById('dash-sla').innerHTML = '<span class="dash-empty">Error loading</span>'; }
+        }
+        async function loadIncidents() {
+            try {
+                const d = await (await fetch('/api/incidents')).json();
+                const el = document.getElementById('dash-incidents');
+                if (d.incidents && d.incidents.length) {
+                    el.innerHTML = d.incidents.map(i =>
+                        `<div class="dash-metric">
+                            <span><strong>${i.title || i.id}</strong> — ${i.system} (${i.status})</span>
+                            <span class="badge-sm ${i.severity}">${i.severity}</span>
+                        </div>`
+                    ).join('');
+                } else {
+                    el.innerHTML = '<span class="dash-empty">No active incidents</span>';
+                }
+            } catch(e) { document.getElementById('dash-incidents').innerHTML = '<span class="dash-empty">Error loading</span>'; }
+        }
+        async function loadCompliance() {
+            try {
+                const d = await (await fetch('/api/security/compliance')).json();
+                const el = document.getElementById('dash-compliance');
+                if (d.policies) {
+                    let html = `<div class="dash-metric"><span><strong>Overall</strong></span><span class="dash-val ${d.overall_compliance_pct>=90?'ok':'warn'}">${d.overall_compliance_pct}%</span></div>`;
+                    for (const [k,v] of Object.entries(d.policies)) {
+                        const cls = v.compliance_pct >= 95 ? 'ok' : v.compliance_pct >= 90 ? 'warn' : 'bad';
+                        html += `<div class="dash-metric"><span>${k.replace(/_/g,' ')}</span><span class="dash-val ${cls}">${v.compliance_pct}%</span></div>`;
+                    }
+                    el.innerHTML = html;
+                }
+            } catch(e) { document.getElementById('dash-compliance').innerHTML = '<span class="dash-empty">Error loading</span>'; }
+        }
+        async function loadDepartments() {
+            try {
+                const d = await (await fetch('/api/departments')).json();
+                const el = document.getElementById('dash-departments');
+                if (d.departments) {
+                    let html = `<div class="dash-metric"><span><strong>Total employees</strong></span><span class="dash-val muted">${d.total_employees}</span></div>`;
+                    for (const [k,v] of Object.entries(d.departments)) {
+                        html += `<div class="dash-metric"><span>${k}</span><span class="dash-val muted">${v}</span></div>`;
+                    }
+                    el.innerHTML = html;
+                }
+            } catch(e) { document.getElementById('dash-departments').innerHTML = '<span class="dash-empty">Error loading</span>'; }
+        }
+
+        /* ── Chat ───────────────────────────────── */
+        userInput.addEventListener('input', () => {
+            userInput.style.height = 'auto';
+            userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+        });
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+
+        function hideWelcome() {
+            if (welcome && !hasMessages) { welcome.style.display = 'none'; hasMessages = true; }
+        }
+
+        function addMessage(text, type, toolsUsed) {
+            hideWelcome();
+            if (type === 'system') {
+                const div = document.createElement('div');
+                div.className = 'msg-system';
+                div.textContent = text;
+                chatContainer.appendChild(div);
+            } else if (type === 'error') {
+                const div = document.createElement('div');
+                div.className = 'msg-error';
+                div.textContent = text;
+                chatContainer.appendChild(div);
+            } else {
+                const div = document.createElement('div');
+                div.className = 'msg ' + type;
+                const avatar = document.createElement('div');
+                avatar.className = 'msg-avatar';
+                avatar.innerHTML = type === 'user' ? '&#x1F464;' : '&#x1F916;';
+                const bubble = document.createElement('div');
+                bubble.className = 'msg-bubble';
+                if (type === 'agent') {
+                    bubble.innerHTML = formatMarkdown(text);
+                    if (toolsUsed && toolsUsed.length > 0) {
+                        const tb = document.createElement('div');
+                        tb.className = 'tools-badge';
+                        tb.innerHTML = '<span>&#x1F527;</span> MCP: ' + toolsUsed.join(', ');
+                        bubble.appendChild(tb);
+                    }
+                } else {
+                    bubble.textContent = text;
+                }
+                div.appendChild(avatar);
+                div.appendChild(bubble);
+                chatContainer.appendChild(div);
+            }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function formatMarkdown(text) {
+            let html = text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/^\d+\.\s+(.*)$/gm, '<li>$1</li>')
+                .replace(/^[-*]\s+(.*)$/gm, '<li>$1</li>')
+                .replace(/\n/g, '<br>');
+            html = html.replace(/((?:<li>.*?<\/li><br>?)+)/g, '<ol>$1</ol>');
+            html = html.replace(/<br><\/ol>/g, '</ol>');
+            html = html.replace(/<ol><br>/g, '<ol>');
+            return html;
+        }
+
+        function showTyping() {
+            hideWelcome();
+            const div = document.createElement('div');
+            div.className = 'typing-indicator';
+            div.id = 'typing';
+            div.innerHTML = '<div class="msg-avatar">&#x1F916;</div><div class="typing-dots"><span></span><span></span><span></span></div>';
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        function hideTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
+
+        function quickSend(text) { closeSidebar(); switchTab('chat'); userInput.value = text; sendMessage(); }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+            addMessage(text, 'user');
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            sendBtn.disabled = true;
+            showTyping();
+            try {
+                const resp = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, session_id: sessionId }),
+                });
+                const data = await resp.json();
+                hideTyping();
+                if (data.error) {
+                    addMessage('Error: ' + data.error, 'error');
+                } else {
+                    addMessage(data.response, 'agent', data.tools_used || []);
+                }
+            } catch (err) {
+                hideTyping();
+                addMessage('Network error: ' + err.message, 'error');
+            } finally {
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        /* ── Sidebar toggle ─────────────────── */
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+
+        async function resetChat() {
+            await fetch('/api/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId }),
+            });
+            chatContainer.innerHTML = '';
+            hasMessages = false;
+            const w = document.createElement('div');
+            w.className = 'welcome-card'; w.id = 'welcome';
+            w.innerHTML = '<h2>Conversation Reset</h2><p>Start a new support conversation.</p>';
+            chatContainer.appendChild(w);
+        }
+    </script>
+</body>
+</html>
